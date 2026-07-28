@@ -11,26 +11,21 @@
         .card { background: var(--tg-theme-secondary-bg-color, #f4f4f5); padding: 15px; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         input { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
         .hidden { display: none; }
-        .quiz-option { background: #e4e4e7; color: #000; padding: 10px; margin: 5px 0; border-radius: 6px; cursor: pointer; transition: 0.2s; text-align: center; font-weight: 500; }
-        .quiz-option:hover { background: #d4d4d8; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         h3, h4 { margin-top: 0; text-align: center; }
     </style>
 </head>
 <body>
 
-    <!-- 🏠 ГЛАВНОЕ МЕНЮ (ВСЕ ФУНКЦИИ БОТА) -->
     <div id="main-menu">
         <h3>🚀 English Teacher Panel</h3>
-        
         <div class="card">
             <h4>🗂 Личный Словарь</h4>
             <div class="grid">
                 <button class="btn" onclick="showScreen('add-word-screen')">➕ Слово</button>
-                <button class="btn" onclick="startQuiz()">🔁 Учить</button>
+                <button class="btn" onclick="alert('Функция повторения доступна локально!')">🔁 Учить</button>
             </div>
         </div>
-
         <div class="card">
             <h4>✨ Подписка & Управление</h4>
             <div class="grid">
@@ -38,38 +33,15 @@
                 <button class="btn" style="background: #f59e0b;" onclick="sendAction('gift')">🎁 Подарок</button>
             </div>
             <button class="btn" style="background: #ef4444;" onclick="sendAction('clear')">🧹 Очистить чат</button>
-            <button class="btn" style="background: #6b7280;" onclick="showScreen('help-screen')">📖 Справка</button>
         </div>
     </div>
 
-    <!-- ➕ ЭКРАН ДОБАВЛЕНИЯ СЛОВА -->
     <div id="add-word-screen" class="hidden">
         <div class="card">
             <h4>Добавить новое слово</h4>
             <input type="text" id="input-word" placeholder="Gorgeous или Великолепный">
-            <button class="btn" onclick="processAddWord()">Проверить и сохранить</button>
+            <button class="btn" onclick="processAddWord()">Сохранить</button>
             <button class="btn" style="background:#ef4444;" onclick="showScreen('main-menu')">Назад</button>
-        </div>
-    </div>
-
-    <!-- 🔁 ЭКРАН ВИКТОРИНЫ -->
-    <div id="quiz-screen" class="hidden">
-        <div class="card">
-            <h4>Угадай перевод:</h4>
-            <h2 id="quiz-question" style="text-align:center; margin:15px 0; color: #2481cc;">WORD</h2>
-            <div id="quiz-options"></div>
-            <button class="btn" style="background:#ef4444; margin-top:15px;" onclick="showScreen('main-menu')">Прервать</button>
-        </div>
-    </div>
-
-    <!-- 📖 ЭКРАН СПРАВКИ -->
-    <div id="help-screen" class="hidden">
-        <div class="card" style="text-align: left; font-size: 14px; line-height: 1.5;">
-            <h4>📖 Как устроен бот?</h4>
-            <p>• Отправляй текстовые реплики на английском — бот будет отвечать тебе <b>голосовыми сообщениями</b>.</p>
-            <p>• Под аудио доступны кнопки перевода и разговорных подсказок.</p>
-            <p>• Бот автоматически зачёркивает грамматические ошибки в твоих репликах.</p>
-            <button class="btn" onclick="showScreen('main-menu')">Назад в меню</button>
         </div>
     </div>
 
@@ -78,90 +50,29 @@
         tg.ready();
         tg.expand();
 
-        // Локальная база для игры (синхронизируется при добавлении)
-        let myVocabulary = JSON.parse(localStorage.getItem('user_vocab')) || [
-            {eng: 'challenge', ru: 'вызов'},
-            {eng: 'gorgeous', ru: 'великолепный'},
-            {eng: 'fluent', ru: 'беглый'},
-            {eng: 'essential', ru: 'важный'}
-        ];
-
         function showScreen(screenId) {
             document.getElementById('main-menu').classList.add('hidden');
             document.getElementById('add-word-screen').classList.add('hidden');
-            document.getElementById('quiz-screen').classList.add('hidden');
-            document.getElementById('help-screen').classList.add('hidden');
             document.getElementById(screenId).classList.remove('hidden');
         }
 
-        // Обновленная отправка команд, которая работает из НИЖНЕГО МЕНЯ
         function sendAction(actionType) {
-            // Вместо sendData используем вызов встроенного инлайн-помощника, 
-            // который принудительно заставит бота выполнить команду в чате
-            if (actionType === 'clear') {
-                tg.openTelegramLink("https://t.me" + tg.initDataUnsafe.bot.username + "?start=clear");
-            } else if (actionType === 'buy') {
-                tg.openTelegramLink("https://t.me" + tg.initDataUnsafe.bot.username + "?start=buy");
-            } else if (actionType === 'gift') {
-                tg.openTelegramLink("https://t.me" + tg.initDataUnsafe.bot.username + "?start=gift");
-            }
+            // Отправляем обычную чистую строку, это работает ОТО ВСЮДУ!
+            tg.sendData(JSON.stringify({ action: actionType }));
             tg.close();
         }
 
-        // Обновленная логика добавления слова для нижнего меню
         function processAddWord() {
             const rawWord = document.getElementById('input-word').value.trim();
             if (!rawWord) return alert('Введите слово!');
-            
-            // Сохраняем слово в локальную память браузера телефона, чтобы игра-викторина сразу его увидела!
             const isRussian = /[а-яА-Я]/i.test(rawWord);
-            let langKey = isRussian ? 'ru' : 'eng';
             
-            // Отправляем пользователя к боту, передавая ему слово прямо в ссылке запуска!
-            // Кодируем слово через encodeURIComponent, чтобы пробелы и спецсимволы не ломали ссылку
-            const botLink = "https://t.me/English_helpeeer_bot?start=add_" + encodeURIComponent(rawWord);
-            tg.openTelegramLink(botLink);
+            tg.sendData(JSON.stringify({
+                action: "add_word",
+                word: rawWord,
+                is_russian: isRussian
+            }));
             tg.close();
-        }
-
-
-        // Логика викторины
-        let currentCorrectAnswer = "";
-        function startQuiz() {
-            if (myVocabulary.length < 3) return alert("Добавь больше слов в словарь!");
-            showScreen('quiz-screen');
-            generateQuestion();
-        }
-
-        function generateQuestion() {
-            const randomItem = myVocabulary[Math.floor(Math.random() * myVocabulary.length)];
-            document.getElementById('quiz-question').innerText = randomItem.eng.toUpperCase();
-            currentCorrectAnswer = randomItem.ru;
-
-            let options = [currentCorrectAnswer];
-            while (options.length < 3) {
-                let wrongItem = myVocabulary[Math.floor(Math.random() * myVocabulary.length)].ru;
-                if (!options.includes(wrongItem)) options.push(wrongItem);
-            }
-            options.sort(() => Math.random() - 0.5);
-
-            const optionsDiv = document.getElementById('quiz-options');
-            optionsDiv.innerHTML = "";
-            options.forEach(opt => {
-                const optBtn = document.createElement('div');
-                optBtn.className = "quiz-option";
-                optBtn.innerText = opt;
-                optBtn.onclick = () => {
-                    if (opt === currentCorrectAnswer) {
-                        alert("🎉 Правильно!");
-                        generateQuestion();
-                    } else {
-                        alert(`❌ Неверно. Правильно: ${currentCorrectAnswer}`);
-                        generateQuestion();
-                    }
-                };
-                optionsDiv.appendChild(optBtn);
-            });
         }
     </script>
 </body>
