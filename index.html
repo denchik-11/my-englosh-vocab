@@ -56,9 +56,9 @@
             document.getElementById(screenId).classList.remove('hidden');
         }
 
-        // 🔥 ИСПРАВЛЕНО: используем switchInlineQuery для отправки скрытых команд из нижнего меню
+        // 🔥 ИСПРАВЛЕНО: Безошибочный вызов через официальный метод tg.openTelegramLink
         function sendAction(actionType) {
-            tg.switchInlineQuery("app_" + actionType);
+            tg.openTelegramLink("https://t.me" + actionType);
             tg.close();
         }
 
@@ -66,7 +66,9 @@
             const rawWord = document.getElementById('input-word').value.trim();
             if (!rawWord) return alert('Введите слово!');
             
-            tg.switchInlineQuery("app_add_" + rawWord);
+            // Кодируем слово, чтобы пробелы не ломали ссылку
+            const cleanWord = encodeURIComponent(rawWord);
+            tg.openTelegramLink("https://t.meadd_" + cleanWord);
             tg.close();
         }
     </script>
