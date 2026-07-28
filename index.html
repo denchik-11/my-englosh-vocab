@@ -56,22 +56,17 @@
             document.getElementById(screenId).classList.remove('hidden');
         }
 
+        // 🔥 ИСПРАВЛЕНО: используем switchInlineQuery для отправки скрытых команд из нижнего меню
         function sendAction(actionType) {
-            // Отправляем обычную чистую строку, это работает ОТО ВСЮДУ!
-            tg.sendData(JSON.stringify({ action: actionType }));
+            tg.switchInlineQuery("app_" + actionType);
             tg.close();
         }
 
         function processAddWord() {
             const rawWord = document.getElementById('input-word').value.trim();
             if (!rawWord) return alert('Введите слово!');
-            const isRussian = /[а-яА-Я]/i.test(rawWord);
             
-            tg.sendData(JSON.stringify({
-                action: "add_word",
-                word: rawWord,
-                is_russian: isRussian
-            }));
+            tg.switchInlineQuery("app_add_" + rawWord);
             tg.close();
         }
     </script>
