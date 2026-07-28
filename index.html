@@ -65,7 +65,7 @@
             document.getElementById(screenId).classList.remove('hidden');
         }
 
-        // Логика автоперевода и добавления слова
+        // Обновленная логика автоперевода и добавления слова
         function processAddWord() {
             const rawWord = document.getElementById('input-word').value.trim();
             if (!rawWord) return alert('Введите слово!');
@@ -73,15 +73,25 @@
             // Определяем язык ввода по символам
             const isRussian = /[а-яА-Я]/i.test(rawWord);
             
-            // Отправляем данные обратно боту в чат через официальный метод Telegram WebApp
-            tg.sendData(JSON.stringify({
+            // Формируем чистый пакет данных
+            const dataToSend = {
                 action: "add_word",
                 word: rawWord,
                 is_russian: isRussian
-            }));
-            
-            tg.close(); // Закрываем мини-приложение после отправки
+            };
+
+            // 📢 Показываем окно проверки, чтобы увидеть, что JS отработал внутри приложения
+            alert("Отправляю слово роботу: " + rawWord);
+
+            try {
+                // Официальный метод Telegram WebApp для отправки данных обратно боту
+                window.Telegram.WebApp.sendData(JSON.stringify(dataToSend));
+                window.Telegram.WebApp.close(); 
+            } catch (err) {
+                alert("Ошибка Telegram WebApp: " + err.message);
+            }
         }
+
 
         // Логика викторины (из 3 вариантов)
         let currentCorrectAnswer = "";
