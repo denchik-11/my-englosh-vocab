@@ -85,7 +85,7 @@
 
             try {
                 // Официальный метод Telegram WebApp для отправки данных обратно боту
-                window.Telegram.WebApp.sendData(JSON.stringify(dataToSend));
+                Telegram.WebApp.sendData(JSON.stringify(dataToSend));
                 window.Telegram.WebApp.close(); 
             } catch (err) {
                 alert("Ошибка Telegram WebApp: " + err.message);
